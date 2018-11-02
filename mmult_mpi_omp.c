@@ -50,14 +50,17 @@ int main(int argc, char* argv[])
       cc1 = malloc(sizeof(double) * nrows * nrows);  DON'T NEED THIS */
 
 
-	if (argc > 2){ // user successfully passed in two file names for two matrices
-		if (myid == 0){
+	if (myid==0){ // user successfully passed in two file names for two matrices
+		if (argc > 2){
  			FILE *a_data; // file ptr for a mtx data
 			FILE *b_data; // file ptr for b mtx data
 			if ((a_data = fopen(argv[1], "r"))==NULL){
 				// failed to open file for a 
 				printf("Failed to open matrix a file. errno: %d", errno);
 				//tell workers to quit via MPI_send
+				for(int i = 0; i < numprocs; i++){
+                                        MPI_send(aa, 0, double, i+1, DONT, MPI_COMM_WORLD);
+                                }
 				exit(0);
 			}
 			if ((b_data = fopen(argv[2], "r"))==NULL){
@@ -70,34 +73,42 @@ int main(int argc, char* argv[])
 				exit(0);
 			}
 
+		// MANAGER CHECKS THAT MATRICES FROM FILES MEET DIMENSION REQUIREMENTS
+			
+			
+			starttime = MPI_Wtime();
+      
+ 			/* Insert your master code here to store the product into cc1 */
+
+
+
+
+
+
+
+     			 endtime = MPI_Wtime();
+     			 printf("%f\n",(endtime - starttime));
+     			 cc2  = malloc(sizeof(double) * nrows * nrows);
+     			 mmult(cc2, aa, nrows, ncols, bb, ncols, nrows);
+     			 compare_matrices(cc2, cc1, nrows, nrows);
+
+		}else{ // user failed to provide two matrices-- tell workers to exit and exit
+			printf("Please execute again with two file name arguments (two matrices).");
+			// tell workers to quit
+                        for(int i = 0; i < numprocs; i++){
+                            MPI_send(aa, 0, double, i+1, DONT, MPI_COMM_WORLD);
+                        }
+			MPI_Finalize();
+                        exit(0);
 		}
 	}else{
-		printf("Please execute again with two file name arguments (two matrices).");
-		exit(0);
+	// Worker Code goes here
+        // FIRST NEED TO RECEIVE MESSAGE FROM MANAGER TO  SEE IF THEY NEED TO QUIT AUTOMATICALLY
+        // i.e. WHEN status.MPI_TAG == DONT	
+	
+	
 	}
-
-  starttime = MPI_Wtime();
-      /* Insert your master code here to store the product into cc1 */
-
-
-
-
-
-
-
-      endtime = MPI_Wtime();
-      printf("%f\n",(endtime - starttime));
-      cc2  = malloc(sizeof(double) * nrows * nrows);
-      mmult(cc2, aa, nrows, ncols, bb, ncols, nrows);
-      compare_matrices(cc2, cc1, nrows, nrows);
-    } else {
-      // Slave Code goes here
-	// FIRST NEED TO RECEIVE MESSAGE FROM MANAGER TO  SEE IF THEY NEED TO QUIT AUTOMATICALLY
-	// i.e. WHEN status.MPI_TAG == DONT
-    }
-  } else {
-    fprintf(stderr, "Usage matrix_times_vector <size>\n");
-  }
+ 
   MPI_Finalize();
   return 0;
 }
