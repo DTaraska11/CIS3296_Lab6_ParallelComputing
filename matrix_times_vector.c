@@ -40,7 +40,10 @@ int main(int argc, char* argv[])
       
       starttime = MPI_Wtime();
       numsent = 0;
-      MPI_Bcast(b, ncols, MPI_DOUBLE, master, MPI_COMM_WORLD);
+// BROADCASTS b TO ALL PROCESSES     
+ MPI_Bcast(b, ncols, MPI_DOUBLE, master, MPI_COMM_WORLD);
+
+//manager begins sending each individual process a row of aa to work on 
       for (i = 0; i < min(numprocs-1, nrows); i++) {
 	for (j = 0; j < ncols; j++) {
 	  buffer[j] = aa[i * ncols + j];
@@ -48,13 +51,17 @@ int main(int argc, char* argv[])
 	MPI_Send(buffer, ncols, MPI_DOUBLE, i+1, i+1, MPI_COMM_WORLD);
 	numsent++;
       }
+
+// manager waits to received answers back from each process
       for (i = 0; i < nrows; i++) {
 	MPI_Recv(&ans, 1, MPI_DOUBLE, MPI_ANY_SOURCE, MPI_ANY_TAG, 
 		 MPI_COMM_WORLD, &status);
 	sender = status.MPI_SOURCE;
 	anstype = status.MPI_TAG;
-	c[anstype-1] = ans;
-	if (numsent < nrows) {
+	c[anstype-1] = ans; // manually inserts answer to corresponding entry in c
+	
+// sends more "slices" of aa IFF dimension of aa is more than number of processes
+if (numsent < nrows) {
 	  for (j = 0; j < ncols; j++) {
 	    buffer[j] = aa[numsent*ncols + j];
 	  }  
