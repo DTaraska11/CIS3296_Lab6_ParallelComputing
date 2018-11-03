@@ -29,6 +29,27 @@ int main(int argc, char* argv[])
     b = (double*)malloc(sizeof(double) * ncols);
     c = (double*)malloc(sizeof(double) * nrows);
     buffer = (double*)malloc(sizeof(double) * ncols);
+    //need to be able to read from a .txt
+    //need to be able to parse the file
+    //save to an array malloc()
+    //fscanf
+    // looking for a longfloat 
+    /*First need to be able to read/scan/parse from a file
+     Possible solution is that we make an array of arrays and 
+     multiply it out that way.
+     We send rows to each worker, and then broadcast the column 
+     to all of the workers. (need to make column into an array)
+     Multiply arrays by the same index. Store each of the 
+     answers of the multiplication in an array, and then add 
+     all the items up (or as we multiply the items we have a 
+     variable that adds up all of the answers together.
+     Then after the worker has the final answer it will send it 
+     out to the manager. (Forgot to mention at the beginning that 
+     we must know which row and which column we are working with.*/
+    
+    
+    
+    
     master = 0;
     if (myid == master) {
       // Master Code goes here
